@@ -362,7 +362,7 @@ if not BetterJokers then
 
     -- Ask the host to send us the requested joker
     function BetterJokers:AskHostCallJoker(unit)
-        local key = unit and unit:key()
+        local key = unit and unit:id()
         if not key then
             log("[BetterJokers] Unit or unit key was nil")
             return
@@ -372,7 +372,7 @@ if not BetterJokers then
 
     -- Ask the host to make the joker hold
     function BetterJokers:AskHostHoldJoker(unit)
-        local key = unit and unit:key()
+        local key = unit and unit:id()
         if not key then
             log("[BetterJokers] Unit or unit key was nil")
             return
@@ -381,9 +381,14 @@ if not BetterJokers then
     end
 
     -- Get the joker unit from a unit key
-    function BetterJokers:GetJokerUnitFromKey(u_key)
+    function BetterJokers:GetJokerUnitFromKey(unit_id)
         local converted_cops = managers.groupai:state():all_converted_enemies()
-        return converted_cops[u_key]
+        for i, unit in pairs(converted_cops) do
+            if unit:id() == unit_id then
+                return unit
+            end
+        end
+        return nil
     end
 
     -- Get the player unit from their peer ID
