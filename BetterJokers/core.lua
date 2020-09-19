@@ -52,7 +52,7 @@ if not BJCustomWaypoints then
         mvec3_add(from, viewport:get_current_camera_position())
     
         local ray = Utils:GetCrosshairRay(from, nil, 'player_ground_check')
-        if not ray then
+        if not ray or not ray.hit_position then
             return false
         end
     
@@ -70,6 +70,10 @@ if not BJCustomWaypoints then
         local my_peer_id = LuaNetworking:LocalPeerID()
 
         local pos, ray = self:GetMyAimPos()
+
+        if not pos or not ray then
+            return
+        end
 
         if managers.hud then
             local data = {
@@ -108,6 +112,11 @@ if not BJCustomWaypoints then
 
         if self.peer_waypoints[peer_id] then
             self:RemovePeerWaypoint(peer_id)
+        end
+
+        -- Sometimes pos is nil, no idea why
+        if not pos.x or not pos.y or not pos.z then
+            return
         end
 
         if managers.hud then
@@ -159,9 +168,23 @@ end
 if not BetterJokers then
     _G.BetterJokers = {}
 
+    BetterJokers.ModPath = ModPath
+    BetterJokers.SavePath = SavePath .. "betterjokers.json"
+    BetterJokers.settings = {
+        disable_incompatibility_warnings = false, -- If true, players will not be notified of possible mod incompatibilities.
+        joker_exclusive_access = false, -- If true, jokers can only be controlled by their owner.
+        joker_my_contours = true, -- Whether your own jokers should take on your own color.
+        joker_other_contours = true -- Whether other people's jokers should take on their color.
+    }
+
     BetterJokers.converts = {}
     
     BetterJokers.peersWithMod = {}
+
+    BetterJokers.activeContours = {}
+
+    -- List of peers whose jokers should only be controllable by themselves.
+    BetterJokers.exclusiveAccessPeers = {}
 
     local session_types = {
         server = 1,
@@ -182,6 +205,30 @@ if not BetterJokers then
         current_session_type = session_types.offline
     end
 
+    -- Load menu settings
+    function BetterJokers:Load()
+        local file = io.open(self.SavePath, 'r')
+        if file then
+            for k, v in pairs(json.decode(file:read('*all')) or {}) do
+                self.settings[k] = v
+            end
+            file:close()
+        end
+    end
+
+    -- Save current menu settings
+    function BetterJokers:Save()
+        local file = io.open(self.SavePath, 'w+')
+        if file then
+            file:write(json.encode(self.settings))
+            file:close()
+        end
+    end
+
+    -- Immediately load/save settings to write a file and to load the settings early
+    BetterJokers:Load()
+    BetterJokers:Save()
+
     -- Call over a joker.
     -- When hosting this will call the joker, as client this asks the host to do it instead.
     function BetterJokers:CallJokerOver(called_unit)
@@ -189,7 +236,7 @@ if not BetterJokers then
             BetterJokers:AskHostCallJoker(called_unit)
         else
             local caller_unit = managers.player:player_unit()
-            BetterJokers:SendJokerToPlayer(called_unit, caller_unit)
+            BetterJokers:SendJokerToPlayer(called_unit, caller_unit, LuaNetworking:LocalPeerID())
         end
     end
 
@@ -202,7 +249,7 @@ if not BetterJokers then
     end
 
     -- Send a joker to a player.
-    function BetterJokers:SendJokerToPlayer(called_unit, target_unit)
+    function BetterJokers:SendJokerToPlayer(called_unit, target_unit, requester_peer_id)
         if not called_unit or not target_unit then
             log("[BetterJokers] Joker unit or Target unit was nil")
             return 
@@ -211,6 +258,12 @@ if not BetterJokers then
         -- Prevent possible cheat attempts from peers or other weirdness caused by bugs
         if not called_unit:base().is_convert then
             log("[BetterJokers] Joker unit was not a convert")
+            return
+        end
+
+        -- Only allow this action if the joker isn't exclusively owned by someone else.
+        if called_unit:base().exclusive_owner_peer_id and called_unit:base().exclusive_owner_peer_id ~= requester_peer_id then
+            log("[BetterJokers] Disallowing action, requester was not the joker's owner")
             return
         end
 
@@ -231,6 +284,11 @@ if not BetterJokers then
 
         if not called_unit:base().is_convert then
             log("[BetterJokers] Joker unit was not a convert")
+            return
+        end
+
+        if called_unit:base().exclusive_owner_peer_id and called_unit:base().exclusive_owner_peer_id ~= requester_peer_id then
+            log("[BetterJokers] Disallowing action, requester was not the joker's owner")
             return
         end
 
@@ -343,20 +401,57 @@ if not BetterJokers then
         end
     end
 
+    -- Add a contour to the joker unit
+    function BetterJokers:ApplyConvertedContour(unit)
+
+        -- Check if contours are enabled for this joker
+        local should_show_contours = false
+        local my_peer_id = LuaNetworking:LocalPeerID()
+        if unit:base().joker_owner_peer_id == my_peer_id and self.settings.joker_my_contours then
+            should_show_contours = true
+        elseif unit:base().joker_owner_peer_id ~= my_peer_id and self.settings.joker_other_contours then
+            should_show_contours = true
+        end
+
+        if not should_show_contours then
+            return
+        end
+
+        -- This function might be called several times, but should only be run once per unit.
+        local key = unit:key()
+        if not key or self.activeContours[key] or not unit:base().joker_owner_peer_id then
+            return
+        end
+
+        local color_id = managers.criminals:character_color_id_by_unit(unit)
+
+        local contour = unit:contour()
+        -- Change contour color
+        contour:change_color("friendly", tweak_data.peer_vector_colors[color_id])
+
+        -- Dumb race conditions require this to be done again on a delayedcall
+        DelayedCalls:Add("betterjokers_set_contour_clientdelayed", 0.5, function()
+            contour:change_color("friendly", tweak_data.peer_vector_colors[color_id])
+        end)
+
+        self.activeContours[key] = true
+    end
+
     -- Networking functions
     -- On network load complete, tell peers that you have Better Jokers installed.
     Hooks:Add('BaseNetworkSessionOnLoadComplete', 'BaseNetworkSessionOnLoadComplete_BetterJokers', function(local_peer, id)
-        LuaNetworking:SendToPeers("betterjokers_hello", "hello from betterjokers")
+        LuaNetworking:SendToPeers("betterjokers_hello", BetterJokers.settings.joker_exclusive_access and "mine" or "ours")
     end)
 
     -- Same as above, if a single peer joins then tell them you've got it installed
     Hooks:Add('BaseNetworkSessionOnPeerEnteredLobby', 'BaseNetworkSessionOnPeerEnteredLobby_BetterJokers', function(peer, peer_id)
-        LuaNetworking:SendToPeer(peer_id, "betterjokers_hello", "hello from betterjokers")
+        LuaNetworking:SendToPeer(peer_id, "betterjokers_hello", BetterJokers.settings.joker_exclusive_access and "mine" or "ours")
     end)
 
     -- If a peer leaves, remove them from the list
     Hooks:Add('BaseNetworkSessionOnPeerRemoved', 'BaseNetworkSessionOnPeerRemoved_BetterJokers', function(peer, peer_id, reason)
         BetterJokers.peersWithMod[peer_id] = nil
+        BetterJokers.exclusiveAccessPeers[peer_id] = nil
     end)
 
     -- Data receive function
@@ -365,6 +460,9 @@ if not BetterJokers then
         -- Peer notified us that they have the mod installed too
         if messageType == "betterjokers_hello" then
             BetterJokers.peersWithMod[sender] = true
+            if data == "mine" then
+                BetterJokers.exclusiveAccessPeers[sender] = true
+            end
         end
 
         -- The following messages can only be handled by the host
@@ -373,7 +471,7 @@ if not BetterJokers then
             if messageType == "betterjokers_calljoker" then
                 local joker_unit = BetterJokers:GetJokerUnitFromKey(data)
                 local target_unit = BetterJokers:GetUnitFromPeerId(sender)
-                BetterJokers:SendJokerToPlayer(joker_unit, target_unit)
+                BetterJokers:SendJokerToPlayer(joker_unit, target_unit, sender)
             end
             -- Respond to a player asking for a joker to hold position
             if messageType == "betterjokers_holdjoker" then
