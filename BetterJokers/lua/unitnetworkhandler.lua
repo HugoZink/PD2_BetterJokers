@@ -9,8 +9,8 @@ Hooks:PostHook(UnitNetworkHandler, "mark_minion", "betterjokers_unitnetwork_mark
     -- Set exclusive access ID
     local my_peer_id = LuaNetworking:LocalPeerID()
     if minion_owner_peer_id == my_peer_id and BetterJokers.settings.joker_exclusive_access then
-        self._unit:base().exclusive_owner_peer_id = my_peer_id
+        unit:base().exclusive_owner_peer_id = my_peer_id
     elseif minion_owner_peer_id ~= my_peer_id and BetterJokers.exclusiveAccessPeers[minion_owner_peer_id] then
-        self._unit:base().exclusive_owner_peer_id = minion_owner_peer_id
+        unit:base().exclusive_owner_peer_id = minion_owner_peer_id
     end
 end)
