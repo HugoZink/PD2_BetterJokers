@@ -12,9 +12,9 @@ Hooks:PostHook(GroupAIStateBase, "convert_hostage_to_criminal", "betterjokers_co
         -- Set exclusive access ID
         local my_peer_id = LuaNetworking:LocalPeerID()
         if peer_id == my_peer_id and BetterJokers.settings.joker_exclusive_access then
-            self._unit:base().exclusive_owner_peer_id = my_peer_id
+            unit:base().exclusive_owner_peer_id = my_peer_id
         elseif peer_id ~= my_peer_id and BetterJokers.exclusiveAccessPeers[peer_id] then
-            self._unit:base().exclusive_owner_peer_id = peer_id
+            unit:base().exclusive_owner_peer_id = peer_id
         end
     end
     
