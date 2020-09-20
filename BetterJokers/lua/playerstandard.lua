@@ -4,9 +4,19 @@ dofile(ModPath .. "core.lua")
 
 local unit_type_minion = 22
 
+local function state_is_bleedout(state_name)
+    return state_name == "bleed_out" or state_name == "arrested" or state_name == "incapacitated" or state_name == "fatal"
+end
+
 local playerstandard_getinteractiontarget_orig = PlayerStandard._get_interaction_target
 function PlayerStandard:_get_interaction_target(char_table, my_head_pos, cam_fwd)
     if not BetterJokers:HostHasMod() then
+        return playerstandard_getinteractiontarget_orig(self, char_table, my_head_pos, cam_fwd)
+    end
+
+    -- If in bleedout, don't call jokers over
+    local current_state_name = self._unit:movement():current_state_name()
+    if state_is_bleedout(current_state_name) then
         return playerstandard_getinteractiontarget_orig(self, char_table, my_head_pos, cam_fwd)
     end
 
@@ -23,6 +33,11 @@ end
 local playerstandard_getintimidationaction_orig = PlayerStandard._get_intimidation_action
 function PlayerStandard:_get_intimidation_action(prime_target, char_table, amount, primary_only, detect_only, secondary)
     if not BetterJokers:HostHasMod() then
+        return playerstandard_getintimidationaction_orig(self, prime_target, char_table, amount, primary_only, detect_only, secondary)
+    end
+
+    local current_state_name = self._unit:movement():current_state_name()
+    if state_is_bleedout(current_state_name) then
         return playerstandard_getintimidationaction_orig(self, prime_target, char_table, amount, primary_only, detect_only, secondary)
     end
 

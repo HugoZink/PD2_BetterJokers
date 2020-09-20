@@ -188,7 +188,8 @@ if not BetterJokers then
         joker_exclusive_access = false, -- If true, jokers can only be controlled by their owner.
         joker_my_contours = true, -- Whether your own jokers should take on your own color.
         joker_other_contours = true, -- Whether other people's jokers should take on their color.
-        waypoint_show_others = true -- Whether other people's waypoints should be shown.
+        waypoint_show_others = true, -- Whether other people's waypoints should be shown.
+        joker_show_health = true -- Whether joker health should be displayed
     }
 
     BetterJokers.converts = {}
@@ -454,6 +455,54 @@ if not BetterJokers then
         end)
 
         self.activeContours[key] = true
+
+        self:AddHealthCircle(unit)
+    end
+
+    -- Add health circle
+    function BetterJokers:AddHealthCircle(unit)
+        if unit:base().infobar or not self.settings.joker_show_health then
+            return
+        end
+
+        local label_data = { unit = unit, name = "" }
+		panel_id = managers.hud:_add_name_label(label_data)
+        unit:base().infobar = panel_id
+        
+        local label = managers.hud:_get_name_label(panel_id)
+        if not label then
+            log("[BetterJokers] Unable to fetch name label for joker unit")
+            return
+        end
+
+        local radial_health = label.panel:bitmap({
+            name = 'bag',
+            texture = 'guis/textures/pd2/hud_health',
+            render_template = 'VertexColorTexturedRadial',
+            blend_mode = 'add',
+            alpha = 1,
+            w = 16,
+            h = 16,
+            layer = 0,
+        })
+        label.bag = radial_health
+        local txt = label.panel:child('text')
+        radial_health:set_center_y(txt:center_y())
+        local l, r, w, h = txt:text_rect()
+        radial_health:set_left(txt:left() + w + 2)
+        radial_health:set_visible(self.settings.joker_show_health and true or false)
+
+        unit:base().bj_healthbar = radial_health
+    end
+
+    -- Remove health circle from unit
+    function BetterJokers:RemoveHealthCircle(unit)
+        if not alive(unit) or not unit:base().infobar then
+            return
+        end
+
+        managers.hud:_remove_name_label(unit:base().infobar)
+        unit:base().bj_healthbar = nil
     end
 
     -- Networking functions

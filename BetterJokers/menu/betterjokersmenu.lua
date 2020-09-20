@@ -39,6 +39,11 @@ Hooks:Add('MenuManagerInitialize', 'betterjokersmenu_init', function(menu_manage
 		BetterJokers:Save()
 	end
 
+	MenuCallbackHandler.bj_joker_show_health = function(this, item)
+		BetterJokers.settings.joker_show_health = item:value() == 'on'
+		BetterJokers:Save()
+	end	
+
 	MenuHelper:LoadFromJsonFile(BetterJokers.ModPath .. 'menu/betterjokersmenu.json', BetterJokers, BetterJokers.settings)
 end)
 

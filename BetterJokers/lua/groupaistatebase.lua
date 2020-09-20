@@ -21,3 +21,16 @@ Hooks:PostHook(GroupAIStateBase, "convert_hostage_to_criminal", "betterjokers_co
     -- Mark this cop as a joker
     unit:base().is_convert = true
 end)
+
+-- On joker death, remove their healthbars
+Hooks:PostHook(GroupAIStateBase, "clbk_minion_dies", "betterjokers_clbkminiondies_groupai_destroylabel", function(self, player_key, minion_unit, damage_info)
+    if minion_unit:base().infobar then
+        BetterJokers:RemoveHealthCircle(minion_unit)
+    end
+end)
+
+Hooks:PostHook(GroupAIStateBase, "clbk_minion_destroyed", "betterjokers_clbkminiondestroyed_groupai_destroylabel", function(self, player_key, minion_unit)
+    if minion_unit:base().infobar then
+        BetterJokers:RemoveHealthCircle(minion_unit)
+    end
+end)

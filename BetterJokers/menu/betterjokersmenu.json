@@ -44,6 +44,15 @@
 		},
 		{
 			"type" : "toggle",
+			"id" : "bj_joker_show_health",
+			"title" : "bj_joker_show_health",
+			"description" : "bj_joker_show_health_desc",
+			"callback" : "bj_joker_show_health",
+			"value" : "bj_joker_show_health",
+			"default_value" : true
+		},
+		{
+			"type" : "toggle",
 			"id" : "bj_disable_incompatibility_warnings",
 			"title" : "bj_disable_incompatibility_warnings",
 			"description" : "bj_disable_incompatibility_warnings_desc",

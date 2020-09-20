@@ -10,3 +10,15 @@ Hooks:PostHook(CopDamage, "_on_death", "BetterJokers_RemoveJokerOnDeath", functi
         end
     end
 end)
+
+-- On damage received, update their health bar
+Hooks:PostHook(CopDamage, "_on_damage_received", "betterjokers_copdamaged_updatehealthbar", function(self)
+    if not self._unit:base().infobar then
+        return
+    end
+
+    local healthbar = self._unit:base().bj_healthbar
+    if healthbar and alive(healthbar) then
+        healthbar:set_color(Color(1, self._health_ratio, 1, 1))
+    end
+end)

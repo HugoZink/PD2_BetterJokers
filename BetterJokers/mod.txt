@@ -3,7 +3,7 @@
 	"description" : "Allows you to call over jokers and make them hold their position.",
 	"author" : "Rokk",
 	"contact" : "morerokk#2048",
-	"version" : "1.2",
+	"version" : "1.3",
 	"blt_version" : 2,
 	"hooks" : [
 		{ "hook_id": "lib/units/beings/player/states/playerstandard", "script_path": "lua/playerstandard.lua" },
@@ -11,6 +11,7 @@
 		{ "hook_id": "lib/units/enemies/cop/copbrain", "script_path": "lua/copbrain.lua" },
 		{ "hook_id": "lib/units/enemies/cop/copdamage", "script_path": "lua/copdamage.lua" },
 		{ "hook_id": "lib/units/enemies/cop/copmovement", "script_path": "lua/copmovement.lua" },
+		{ "hook_id": "lib/units/enemies/cop/huskcopbrain", "script_path": "lua/huskcopbrain.lua" },
 
 		{ "hook_id": "lib/units/enemies/cop/logics/coplogicattack", "script_path": "lua/coplogicattack.lua" },
 		{ "hook_id": "lib/units/enemies/cop/actions/full_body/copactiondodge", "script_path": "lua/copactiondodge.lua" },
