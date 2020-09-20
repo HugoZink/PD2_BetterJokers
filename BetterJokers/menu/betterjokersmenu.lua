@@ -34,6 +34,11 @@ Hooks:Add('MenuManagerInitialize', 'betterjokersmenu_init', function(menu_manage
 		BetterJokers:Save()
 	end
 
+	MenuCallbackHandler.bjcwp_show_other_waypoints = function(this, item)
+		BetterJokers.settings.waypoint_show_others = item:value() == 'on'
+		BetterJokers:Save()
+	end
+
 	MenuHelper:LoadFromJsonFile(BetterJokers.ModPath .. 'menu/betterjokersmenu.json', BetterJokers, BetterJokers.settings)
 end)
 

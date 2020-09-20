@@ -75,6 +75,11 @@ if not BJCustomWaypoints then
             return
         end
 
+        -- Sometimes pos components are nil, no idea why
+        if not pos.x or not pos.y or not pos.z then
+            return
+        end
+
         if managers.hud then
             local data = {
                 position = pos,
@@ -128,16 +133,24 @@ if not BJCustomWaypoints then
                 present_timer = 0,
                 state = 'present',
                 radius = 50,
-                color = tweak_data.preplanning_peer_colors[my_peer_id ~= 0 and my_peer_id or 1],
+                color = tweak_data.preplanning_peer_colors[peer_id ~= 0 and peer_id or 1],
                 blend_mode = 'add'
             }
-            managers.hud:add_waypoint("BJ_CWP_" .. peer_id, data)
+            if BetterJokers and not BetterJokers.settings.waypoint_show_others then
+                -- Do nothing
+            else
+                managers.hud:add_waypoint("BJ_CWP_" .. peer_id, data)
+            end
             self.peer_waypoints[peer_id] = pos
         end
     end
 
     function BJCustomWaypoints:RemovePeerWaypoint(peer_id)
-        managers.hud:remove_waypoint("BJ_CWP_" .. peer_id)
+        if BetterJokers and not BetterJokers.settings.waypoint_show_others then
+            -- Do nothing
+        else
+            managers.hud:remove_waypoint("BJ_CWP_" .. peer_id)
+        end
         self.peer_waypoints[peer_id] = nil
     end
 
@@ -174,7 +187,8 @@ if not BetterJokers then
         disable_incompatibility_warnings = false, -- If true, players will not be notified of possible mod incompatibilities.
         joker_exclusive_access = false, -- If true, jokers can only be controlled by their owner.
         joker_my_contours = true, -- Whether your own jokers should take on your own color.
-        joker_other_contours = true -- Whether other people's jokers should take on their color.
+        joker_other_contours = true, -- Whether other people's jokers should take on their color.
+        waypoint_show_others = true -- Whether other people's waypoints should be shown.
     }
 
     BetterJokers.converts = {}
@@ -384,7 +398,7 @@ if not BetterJokers then
     function BetterJokers:GetJokerUnitFromKey(unit_id)
         local converted_cops = managers.groupai:state():all_converted_enemies()
         for i, unit in pairs(converted_cops) do
-            if unit:id() == unit_id then
+            if tostring(unit:id()) == unit_id then
                 return unit
             end
         end

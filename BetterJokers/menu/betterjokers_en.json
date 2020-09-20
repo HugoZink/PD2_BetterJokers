@@ -10,5 +10,8 @@
 	"bj_disable_incompatibility_warnings": "Disable Incompatibility Warnings",
 	"bj_disable_incompatibility_warnings_desc": "Disables incompatibility warnings with other mods (like Keepers).",
 
+	"bjcwp_show_other_waypoints": "Show other people's waypoints",
+	"bjcwp_show_other_waypoints_desc": "If disabled, other people's waypoints will not be shown on the HUD.",
+
 	"bj_thanks": "Carkidd <3"
 }
