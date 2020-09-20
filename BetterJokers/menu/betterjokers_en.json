@@ -1,5 +1,6 @@
 {
 	"bj_title": "Better Jokers",
+	"bj_desc": "Options for Better Jokers",
 
 	"bj_joker_exclusive_access": "Exclusive Ownership",
 	"bj_joker_exclusive_access_desc": "If enabled, your jokers can only be called over or made to hold by you, and no one else.",
