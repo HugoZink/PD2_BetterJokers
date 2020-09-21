@@ -465,7 +465,7 @@ if not BetterJokers then
             return
         end
 
-        local label_data = { unit = unit, name = "" }
+        local label_data = { unit = unit, name = "0" }
 		panel_id = managers.hud:_add_name_label(label_data)
         unit:base().infobar = panel_id
         
@@ -489,10 +489,14 @@ if not BetterJokers then
         local txt = label.panel:child('text')
         radial_health:set_center_y(txt:center_y())
         local l, r, w, h = txt:text_rect()
-        radial_health:set_left(txt:left() + w + 2)
+        radial_health:set_left(txt:left() - w)
         radial_health:set_visible(self.settings.joker_show_health and true or false)
 
         unit:base().bj_healthbar = radial_health
+        unit:base().bj_textpanel = txt
+        unit:base().bj_kills = 0
+
+        self:UpdateKillCounter(unit)
     end
 
     -- Remove health circle from unit
@@ -503,6 +507,18 @@ if not BetterJokers then
 
         managers.hud:_remove_name_label(unit:base().infobar)
         unit:base().bj_healthbar = nil
+        unit:base().bj_textpanel = nil
+        unit:base().bj_kills = nil
+    end
+
+    -- Update text label killcount on joker
+    function BetterJokers:UpdateKillCounter(unit)
+        if not unit or not unit:base().bj_textpanel or not unit:base().bj_kills then
+            return
+        end
+
+        -- The weird character below is unicode, translates to a skull ingame
+        unit:base().bj_textpanel:set_text("" .. tostring(unit:base().bj_kills))
     end
 
     -- Networking functions
