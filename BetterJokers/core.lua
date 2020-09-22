@@ -287,6 +287,7 @@ if not BetterJokers then
         local follow_objective = self:GetFollowObjectiveToUnit(target_unit)
 
         joker_brain.is_holding = false
+        joker_brain:set_logic("travel") -- And make it snappy
         joker_brain:set_objective(follow_objective)
     end
 
@@ -324,6 +325,7 @@ if not BetterJokers then
 
         local stay_objective = self:GetHoldObjectiveForUnit(called_unit)
         
+        joker_brain:set_logic("travel")
         joker_brain:set_objective(stay_objective)
     end
 
