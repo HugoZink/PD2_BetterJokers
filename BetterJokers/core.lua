@@ -287,8 +287,13 @@ if not BetterJokers then
         local follow_objective = self:GetFollowObjectiveToUnit(target_unit)
 
         joker_brain.is_holding = false
-        joker_brain:set_logic("travel") -- And make it snappy
         joker_brain:set_objective(follow_objective)
+        joker_brain:set_logic("travel") -- And make it snappy
+        called_unit:movement():action_request({
+            type = "idle",
+            body_part = 1,
+            sync = true
+        })
     end
 
     -- Make the specified joker unit hold position
@@ -325,8 +330,13 @@ if not BetterJokers then
 
         local stay_objective = self:GetHoldObjectiveForUnit(called_unit)
         
-        joker_brain:set_logic("travel")
         joker_brain:set_objective(stay_objective)
+        joker_brain:set_logic("travel")
+        called_unit:movement():action_request({
+            type = "idle",
+            body_part = 1,
+            sync = true
+        })
     end
 
     -- Get follow objective for a unit
