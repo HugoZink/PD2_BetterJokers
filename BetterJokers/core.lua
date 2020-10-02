@@ -253,6 +253,9 @@ if not BetterJokers then
             local caller_unit = managers.player:player_unit()
             BetterJokers:SendJokerToPlayer(called_unit, caller_unit, LuaNetworking:LocalPeerID())
         end
+
+        -- Refresh the contour because this sometimes goes oof
+        BetterJokers:ApplyConvertedContour(called_unit)
     end
 
     function BetterJokers:CallJokerHold(called_unit)
@@ -261,6 +264,8 @@ if not BetterJokers then
         else
             BetterJokers:HoldJokerPosition(called_unit, LuaNetworking:LocalPeerID())
         end
+
+        BetterJokers:ApplyConvertedContour(called_unit)
     end
 
     -- Send a joker to a player.
