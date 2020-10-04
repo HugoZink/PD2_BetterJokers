@@ -3,7 +3,7 @@
 	"description" : "Allows you to call over jokers and make them hold their position.",
 	"author" : "Rokk",
 	"contact" : "morerokk#2048",
-	"version" : "1.4.1",
+	"version" : "1.5",
 	"blt_version" : 2,
 	"hooks" : [
 		{ "hook_id": "lib/units/beings/player/states/playerstandard", "script_path": "lua/playerstandard.lua" },
@@ -39,6 +39,15 @@
 			"name": "Remove Waypoint",
 			"description": "Remove your custom waypoint.",
 			"script_path": "keybinds/removewaypoint.lua",
+			"run_in_menu": false,
+			"run_in_game": true,
+			"localized": false
+		},
+		{
+			"keybind_id": "bjcwp_hidepeerwaypoints",
+			"name": "Hide Peer Waypoints",
+			"description": "When pressed, instantly hides all active waypoints sent by peers.",
+			"script_path": "keybinds/hidepeerwaypoints.lua",
 			"run_in_menu": false,
 			"run_in_game": true,
 			"localized": false

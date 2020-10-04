@@ -154,6 +154,16 @@ if not BJCustomWaypoints then
         self.peer_waypoints[peer_id] = nil
     end
 
+    -- Triggered by a keybind, this function will *visually* remove all received peer waypoints in case they get stuck or someone won't remove theirs
+    -- The waypoints should still be kept internally, in case clients want to use those to commandeer their jokers. They're just not shown.
+    function BJCustomWaypoints:HideAllPeerWaypoints()
+        for peer_id, pos in pairs(self.peer_waypoints) do
+            if peer_id and pos then
+                managers.hud:remove_waypoint("BJ_CWP_" .. peer_id)
+            end
+        end
+    end
+
     -- Network functions
     -- If a peer leaves, remove their waypoint
     Hooks:Add('BaseNetworkSessionOnPeerRemoved', 'BaseNetworkSessionOnPeerRemoved_BJ_CWP', function(peer, peer_id, reason)
@@ -248,24 +258,26 @@ if not BetterJokers then
     -- When hosting this will call the joker, as client this asks the host to do it instead.
     function BetterJokers:CallJokerOver(called_unit)
         if current_session_type == session_types.client then
-            BetterJokers:AskHostCallJoker(called_unit)
+            self:AskHostCallJoker(called_unit)
         else
             local caller_unit = managers.player:player_unit()
-            BetterJokers:SendJokerToPlayer(called_unit, caller_unit, LuaNetworking:LocalPeerID())
+            self:SendJokerToPlayer(called_unit, caller_unit, LuaNetworking:LocalPeerID())
         end
 
         -- Refresh the contour because this sometimes goes oof
-        BetterJokers:ApplyConvertedContour(called_unit)
+        self:ApplyConvertedContour(called_unit)
+        self:UpdateHoldIcon(called_unit)
     end
 
     function BetterJokers:CallJokerHold(called_unit)
         if current_session_type == session_types.client then
-            BetterJokers:AskHostHoldJoker(called_unit)
+            self:AskHostHoldJoker(called_unit)
         else
-            BetterJokers:HoldJokerPosition(called_unit, LuaNetworking:LocalPeerID())
+            self:HoldJokerPosition(called_unit, LuaNetworking:LocalPeerID())
         end
 
-        BetterJokers:ApplyConvertedContour(called_unit)
+        self:ApplyConvertedContour(called_unit)
+        self:UpdateHoldIcon(called_unit)
     end
 
     -- Send a joker to a player.
@@ -390,6 +402,7 @@ if not BetterJokers then
 
         unit:brain():set_objective(objective)
         unit:brain().is_holding = true
+        self:UpdateHoldIcon(unit)
     end    
 
     -- Ask the host to send us the requested joker
@@ -500,7 +513,7 @@ if not BetterJokers then
             alpha = 1,
             w = 16,
             h = 16,
-            layer = 0,
+            layer = 0
         })
         label.bag = radial_health
         local txt = label.panel:child('text')
@@ -509,8 +522,25 @@ if not BetterJokers then
         radial_health:set_left(txt:left() - w)
         radial_health:set_visible(self.settings.joker_show_health and true or false)
 
+        -- Set the hold icon
+        local hold_icon = label.panel:bitmap({
+            name = 'infamy',
+            texture = 'guis/textures/pd2/stophand_symbol',
+            blend_mode = 'add',
+            alpha = 1,
+            w = 8,
+            h = 16,
+            layer = 0,
+            visible = false
+        })
+        label.infamy = hold_icon
+        hold_icon:set_center_y(txt:center_y())
+        hold_icon:set_left(txt:left() + w + 10)
+        hold_icon:set_visible(false)
+
         unit:base().bj_healthbar = radial_health
         unit:base().bj_textpanel = txt
+        unit:base().bj_holdicon = hold_icon
         unit:base().bj_kills = 0
 
         self:UpdateKillCounter(unit)
@@ -525,6 +555,7 @@ if not BetterJokers then
         managers.hud:_remove_name_label(unit:base().infobar)
         unit:base().bj_healthbar = nil
         unit:base().bj_textpanel = nil
+        unit:base().bj_holdicon = nil
         unit:base().bj_kills = nil
     end
 
@@ -536,6 +567,20 @@ if not BetterJokers then
 
         -- The weird character below is unicode, translates to a skull ingame
         unit:base().bj_textpanel:set_text("" .. tostring(unit:base().bj_kills))
+    end
+
+    -- Update their "is holding" icon
+    function BetterJokers:UpdateHoldIcon(unit)
+        if not unit or not unit:base().bj_textpanel or not unit:base().bj_holdicon then
+            log("[BetterJokers] Unit had no hold icon variable set, cannot enable/disable icon")
+            return
+        end
+
+        if unit:brain().is_holding then
+            unit:base().bj_holdicon:set_visible(true)
+        else
+            unit:base().bj_holdicon:set_visible(false)
+        end
     end
 
     -- Networking functions
