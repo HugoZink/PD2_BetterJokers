@@ -265,7 +265,7 @@ if not BetterJokers then
         end
 
         -- Refresh the contour because this sometimes goes oof
-        self:ApplyConvertedContour(called_unit)
+        self:ApplyConvertedContour(called_unit, true)
         self:UpdateHoldIcon(called_unit)
     end
 
@@ -276,7 +276,7 @@ if not BetterJokers then
             self:HoldJokerPosition(called_unit, LuaNetworking:LocalPeerID())
         end
 
-        self:ApplyConvertedContour(called_unit)
+        self:ApplyConvertedContour(called_unit, true)
         self:UpdateHoldIcon(called_unit)
     end
 
@@ -302,6 +302,11 @@ if not BetterJokers then
         local joker_brain = called_unit:brain()
 
         local follow_objective = self:GetFollowObjectiveToUnit(target_unit)
+
+        -- If the joker was holding, notify peers that the hold icon should be removed
+        if joker_brain.is_holding then
+            LuaNetworking:SendToPeers("betterjokers_convertstoppedholding", tostring(called_unit:id()))
+        end
 
         joker_brain.is_holding = false
         joker_brain:set_objective(follow_objective)
@@ -403,6 +408,8 @@ if not BetterJokers then
         unit:brain():set_objective(objective)
         unit:brain().is_holding = true
         self:UpdateHoldIcon(unit)
+
+        LuaNetworking:SendToPeers("betterjokers_convertarrivedatholdpos", tostring(unit:id()))
     end    
 
     -- Ask the host to send us the requested joker
@@ -452,7 +459,7 @@ if not BetterJokers then
     end
 
     -- Add a contour to the joker unit
-    function BetterJokers:ApplyConvertedContour(unit)
+    function BetterJokers:ApplyConvertedContour(unit, is_refresh)
 
         -- Check if contours are enabled for this joker
         local should_show_contours = false
@@ -468,8 +475,9 @@ if not BetterJokers then
         end
 
         -- This function might be called several times, but should only be run once per unit.
+        -- *Unless* we're dealing with a "contour refresh" (sometimes the contours revert and have to be re-applied).
         local key = unit:key()
-        if not key or self.activeContours[key] or not unit:base().joker_owner_peer_id then
+        if not is_refresh and (not key or self.activeContours[key] or not unit:base().joker_owner_peer_id) then
             return
         end
 
@@ -495,6 +503,7 @@ if not BetterJokers then
             return
         end
 
+        -- The weird square is unicode, it's a skull icon ingame
         local label_data = { unit = unit, name = "0" }
 		panel_id = managers.hud:_add_name_label(label_data)
         unit:base().infobar = panel_id
@@ -548,11 +557,12 @@ if not BetterJokers then
 
     -- Remove health circle from unit
     function BetterJokers:RemoveHealthCircle(unit)
-        if not alive(unit) or not unit:base().infobar then
+        if not unit or not alive(unit) or not unit:base().infobar then
             return
         end
 
         managers.hud:_remove_name_label(unit:base().infobar)
+        unit:base().infobar = nil
         unit:base().bj_healthbar = nil
         unit:base().bj_textpanel = nil
         unit:base().bj_holdicon = nil
@@ -583,6 +593,26 @@ if not BetterJokers then
         end
     end
 
+    -- Always enable their "is holding" icon, this happens as a client if the host tells us that the joker arrived at their hold pos
+    function BetterJokers:EnableHoldIcon(unit)
+        if not unit or not unit:base().bj_textpanel or not unit:base().bj_holdicon then
+            log("[BetterJokers] Unit had no hold icon variable set, cannot enable icon")
+            return
+        end
+
+        unit:base().bj_holdicon:set_visible(true)
+    end
+
+    -- Ditto, but for disabling the icon
+    function BetterJokers:DisableHoldIcon(unit)
+        if not unit or not unit:base().bj_textpanel or not unit:base().bj_holdicon then
+            log("[BetterJokers] Unit had no hold icon variable set, cannot enable icon")
+            return
+        end
+
+        unit:base().bj_holdicon:set_visible(false)
+    end
+
     -- Networking functions
     -- On network load complete, tell peers that you have Better Jokers installed.
     Hooks:Add('BaseNetworkSessionOnLoadComplete', 'BaseNetworkSessionOnLoadComplete_BetterJokers', function(local_peer, id)
@@ -609,6 +639,18 @@ if not BetterJokers then
             if data == "mine" then
                 BetterJokers.exclusiveAccessPeers[sender] = true
             end
+        end
+
+        -- Peer notified us that a joker successfully arrived at their hold position
+        if messageType == "betterjokers_convertarrivedatholdpos" then
+            local joker_unit = BetterJokers:GetJokerUnitFromKey(data)
+            BetterJokers:EnableHoldIcon(joker_unit)
+        end
+
+        -- Ditto, but they got called away instead
+        if messageType == "betterjokers_convertstoppedholding" then
+            local joker_unit = BetterJokers:GetJokerUnitFromKey(data)
+            BetterJokers:DisableHoldIcon(joker_unit)
         end
 
         -- The following messages can only be handled by the host

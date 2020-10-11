@@ -3,7 +3,7 @@
 	"description" : "Allows you to call over jokers and make them hold their position.",
 	"author" : "Rokk",
 	"contact" : "morerokk#2048",
-	"version" : "1.5",
+	"version" : "1.6",
 	"blt_version" : 2,
 	"hooks" : [
 		{ "hook_id": "lib/units/beings/player/states/playerstandard", "script_path": "lua/playerstandard.lua" },
