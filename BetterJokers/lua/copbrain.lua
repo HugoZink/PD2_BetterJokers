@@ -38,3 +38,14 @@ Hooks:PostHook(CopBrain, "convert_to_criminal", "betterjokers_registerjoker", fu
         end
     end
 end)
+
+-- Not *exactly* sure what importance is for.
+-- I initially thought it made them not killed by map elements but now it seems it's more closely related to their objectives.
+local copbrain_setimportant_orig = CopBrain.set_important
+function CopBrain:set_important(state)
+	if self.is_convert then
+		state = true
+    end
+
+	return copbrain_setimportant_orig(self, state)
+end

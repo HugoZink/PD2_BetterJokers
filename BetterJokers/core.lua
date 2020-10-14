@@ -251,7 +251,11 @@ if not BetterJokers then
     end
 
     -- Immediately load/save settings to write a file and to load the settings early
-    BetterJokers:Load()
+    -- Load function execution is quarantined to a different file so that if the settings file is corrupt,
+    -- it won't abort execution of this file. It will then overwrite the corrupt settings with fresh defaults.
+    -- TODO: check if an IIFE (function() BetterJokers:Load end)() would work instead
+    --BetterJokers:Load()
+    dofile(ModPath .. "loadsettings.lua")
     BetterJokers:Save()
 
     -- Call over a joker.
@@ -436,7 +440,7 @@ if not BetterJokers then
     function BetterJokers:GetJokerUnitFromKey(unit_id)
         local converted_cops = managers.groupai:state():all_converted_enemies()
         for i, unit in pairs(converted_cops) do
-            if tostring(unit:id()) == unit_id then
+            if unit and alive(unit) and tostring(unit:id()) == unit_id then
                 return unit
             end
         end
