@@ -440,7 +440,7 @@ if not BetterJokers then
     function BetterJokers:GetJokerUnitFromKey(unit_id)
         local converted_cops = managers.groupai:state():all_converted_enemies()
         for i, unit in pairs(converted_cops) do
-            if unit and alive(unit) and tostring(unit:id()) == unit_id then
+            if unit and unit.alive and alive(unit) and unit.id and tostring(unit:id()) == unit_id then
                 return unit
             end
         end
