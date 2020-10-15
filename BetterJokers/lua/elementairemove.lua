@@ -113,8 +113,8 @@ elseif levels_warp_jokers[current_level_id] then
 					-- Warp jokers
 					if instigator:base().is_convert then
 						local player_unit = managers.player and managers.player:player_unit()
-						if player_unit then
-							instigator:set_position(player_unit:position())
+						if player_unit and instigator:movement() then
+							instigator:movement():set_position(player_unit:position())
 						end
 					else
 						instigator:brain():set_active(false)
