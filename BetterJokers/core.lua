@@ -251,9 +251,8 @@ if not BetterJokers then
     end
 
     -- Immediately load/save settings to write a file and to load the settings early
-    -- Load function execution is quarantined to a different file so that if the settings file is corrupt,
+    -- The settings loading is quarantined to a different file so that if the settings file is corrupt,
     -- it won't abort execution of this file. It will then overwrite the corrupt settings with fresh defaults.
-    -- TODO: check if an IIFE (function() BetterJokers:Load end)() would work instead
     --BetterJokers:Load()
     dofile(ModPath .. "loadsettings.lua")
     BetterJokers:Save()
@@ -265,7 +264,7 @@ if not BetterJokers then
             self:AskHostCallJoker(called_unit)
         else
             local caller_unit = managers.player:player_unit()
-            self:SendJokerToPlayer(called_unit, caller_unit, LuaNetworking:LocalPeerID())
+            self:SendJokerToPlayer(called_unit, caller_unit, LuaNetworking and LuaNetworking:LocalPeerID() or 1)
         end
 
         -- Refresh the contour because this sometimes goes oof
@@ -509,7 +508,7 @@ if not BetterJokers then
 
         -- The weird square is unicode, it's a skull icon ingame
         local label_data = { unit = unit, name = "0" }
-		panel_id = managers.hud:_add_name_label(label_data)
+        panel_id = managers.hud:_add_name_label(label_data)
         unit:base().infobar = panel_id
         
         local label = managers.hud:_get_name_label(panel_id)
