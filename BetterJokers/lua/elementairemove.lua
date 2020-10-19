@@ -10,13 +10,14 @@ end
 -- They can figure it out for themselves here, either they take a shortcut or an alternative route that the bots also take
 local levels_intercept_jokers = {
 	hox_1 = true, -- Hoxton Breakout Day 1 garage door
-	pbr = true, -- Beneath The Mountain first airlock
-	Berry = true -- Probably also beneath the mountain, I'm not sure which one to take
+	pbr = true -- Beneath The Mountain first airlock
 }
 
 -- List of heists that should warp the jokers towards the player.
 local levels_warp_jokers = {
-	mex = true -- Border Crossing
+	mex = true, -- Border Crossing
+	pbr2 = true, -- Birth of Sky
+	vit = true -- White House
 }
 
 if levels_intercept_jokers[current_level_id] then

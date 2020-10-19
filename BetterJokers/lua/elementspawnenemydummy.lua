@@ -16,7 +16,9 @@ local levels_intercept_jokers = {
 
 -- List of heists that should warp the jokers towards the player.
 local levels_warp_jokers = {
-	mex = true -- Border Crossing
+	mex = true, -- Border Crossing
+	pbr2 = true, -- Birth of Sky
+	vit = true -- White House
 }
 
 if levels_intercept_jokers[current_level_id] then
