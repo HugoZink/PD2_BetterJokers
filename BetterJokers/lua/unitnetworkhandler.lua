@@ -10,6 +10,8 @@ Hooks:PostHook(UnitNetworkHandler, "mark_minion", "betterjokers_unitnetwork_mark
     unit:base().joker_owner_peer_id = minion_owner_peer_id
     unit:brain().joker_owner_peer_id = minion_owner_peer_id
     unit:base().is_convert = true
+    unit:brain().is_convert = true
+    unit:brain():set_important(true)
     BetterJokers:ApplyConvertedContour(unit)
 
     -- Set exclusive access ID

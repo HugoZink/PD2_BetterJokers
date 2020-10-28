@@ -21,6 +21,7 @@ Hooks:PostHook(CopBrain, "convert_to_criminal", "betterjokers_registerjoker", fu
     if self._unit:movement()._action_common_data then
         self._unit:movement()._action_common_data.char_tweak = chartweak
     end
+    self:set_important(true)
 
     -- Assign the converter's peer ID as owner
     if alive(mastermind_criminal) then
@@ -41,6 +42,7 @@ end)
 
 -- Not *exactly* sure what importance is for.
 -- I initially thought it made them not killed by map elements but now it seems it's more closely related to their objectives.
+-- UPDATE: This function still seems to be used, otherwise they might go braindead instead of being transported in Border Crossing
 local copbrain_setimportant_orig = CopBrain.set_important
 function CopBrain:set_important(state)
 	if self.is_convert then
